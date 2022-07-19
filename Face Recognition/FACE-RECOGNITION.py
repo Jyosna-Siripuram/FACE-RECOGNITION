@@ -1,0 +1,60 @@
+import cv2
+import os
+from cv2 import FONT_HERSHEY_SIMPLEX
+from cv2 import FONT_HERSHEY_DUPLEX
+cam = cv2.VideoCapture(0)
+#i=0
+while True:
+
+    isTrue,frame = cam.read()
+    cv2.imshow('Video',frame)
+
+    people = []
+    for i in os.listdir(r'C:\Users\RamyaJyosna\Desktop\fr\New folder\training data'):
+        people.append(i)
+# print(people)
+# features = np.load('features.npy',allow_pickle=True)
+# labels = np.load('labels.npy')
+
+    face_recognizer = cv2.face.LBPHFaceRecognizer_create()
+    face_recognizer.read("face_trained.yml")
+
+    gray = cv2.cvtColor(frame,cv2.COLOR_BGR2GRAY)
+    
+    if gray.shape>(1000,1000):
+        resized_img=cv2.resize(gray,(400,400))
+    else:
+        resized_img=gray
+    print(gray.shape)
+
+    haar_cascade = cv2.CascadeClassifier('haar.xml')
+    face_rects = haar_cascade.detectMultiScale(resized_img,scaleFactor =1.5,minNeighbors = 2)
+
+    for (x,y,w,h) in face_rects:
+        faces_roi = resized_img[y:y+h,x:x+w]
+
+        label,accuracy = face_recognizer.predict(faces_roi)
+       #print(f'Label = {people[label]} , accuracy = {accuracy}')
+
+        cv2.rectangle(resized_img,(x,y),(x+w,y+h),(255,0,0),thickness=2)
+        
+        features_roi='features.npy'
+        if  (features_roi)<=('faces_roi') :
+            cv2.putText(resized_img,str(people[label]),(x+3,y+3),FONT_HERSHEY_SIMPLEX,1.2,(0,255,0),thickness=2)
+        else:
+            cv2.putText(resized_img,str('unknown'),(x+3,y+3),FONT_HERSHEY_DUPLEX,1.2,(0,255,0),thickness=1)
+        print('faces_roi:', faces_roi)
+    
+        print('features:',features_roi)
+        
+        
+        #cv2.putText(image,str(people[label]),(x+3,y+3),FONT_HERSHEY_SIMPLEX,1.2,(0,255,0),thickness=2)
+        #cv2.putText(image,str('unknown'),(x+3,y+3),FONT_HERSHEY_SIMPLEX,1.2,(0,255,0),thickness=2)
+        
+        cv2.imshow('detected face',resized_img)
+        cv2.waitKey(0)
+    if cv2.waitKey(0) & 0xFF==ord('d'):
+     break
+
+cam.release()
+cv2.destroyAllWindows()
